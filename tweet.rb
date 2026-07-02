@@ -14,7 +14,7 @@ EOS
   Tempfile.open('obsidian_out') do |f|
     success = system(OBSIDIAN_CLI, "daily:append", "content=#{text}", out: f.path, err: [:child, :out])
     if success
-      # puts ">> 追記しました: #{arg}"
+      puts ">> 追記しました: #{arg}"
     else
       puts "エラーが発生しました:"
       f.rewind
