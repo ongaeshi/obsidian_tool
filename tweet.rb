@@ -5,11 +5,19 @@ require 'tempfile'
 OBSIDIAN_CLI="obsidian.com"
 
 def post_to_obsidian(arg)
-  time = Time.now.strftime("%H:%M")
-  text = <<EOS
+  if arg.start_with?("- ")
+    text = "#{arg}"
+  elsif arg.start_with?("1. ")
+    text = "#{arg}"
+  elsif arg.start_with?("| ")
+    text = "#{arg[2..-1]}"
+  else
+    time = Time.now.strftime("%H:%M")
+    text = <<EOS
 ---
 #{time} #{arg}
 EOS
+  end
 
   Tempfile.open('obsidian_out') do |f|
     success = system(OBSIDIAN_CLI, "daily:append", "content=#{text}", out: f.path, err: [:child, :out])
