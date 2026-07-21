@@ -17,14 +17,14 @@ daily_notes = Dir.glob(File.join(dir, "*.md")).select do |f|
 end
 
 days = %w(日 月 火 水 木 金 土)
-results = []
+results_by_date = {}
 
 daily_notes.sort.each do |note_path|
   basename = File.basename(note_path, ".md")
   date = Date.parse(basename) rescue nil
   next unless date
   
-  day_str = days[date.wday]
+  day_str = "#{date.month}/#{date.day}(#{days[date.wday]})"
   content = File.read(note_path, encoding: 'bom|utf-8')
   
   in_tsubuyaki = false
@@ -43,24 +43,47 @@ daily_notes.sort.each do |note_path|
   end
   
   entries = tsubuyaki_text.split(/^---+$/)
+  day_results = []
   
   entries.each do |entry|
     if entry.include?("#tlog")
-      cleaned_entry = entry.gsub(/#tlog\s*/, "").strip
-      # 縦方向に伸びないように改行をスペースに変換して圧縮
-      cleaned_entry = cleaned_entry.gsub(/\r?\n/, " ")
+      cleaned_entry = entry.gsub(/#tlog\s*/, "")
+      # 行頭にあるかもしれない時刻(例: "- 12:34" や "12:34")を削除
+      cleaned_entry = cleaned_entry.sub(/^\s*[-*]?\s*\[?\d{1,2}:\d{2}\]?\s*/, "")
+      cleaned_entry = cleaned_entry.strip
       
-      results << "- [[#{basename}#つぶやき|#{day_str}]] #{cleaned_entry}"
+      day_results << cleaned_entry unless cleaned_entry.empty?
     end
+  end
+  
+  unless day_results.empty?
+    results_by_date[[basename, day_str]] = day_results
   end
 end
 
-if results.empty?
+if results_by_date.empty?
   puts "No #tlog found."
   exit 0
 end
 
-tlog_block = results.join("\n") + "\n\n"
+tlog_block = "## tlog\n\n"
+results_by_date.each do |(basename, day_str), entries|
+  tlog_block << "- [[#{basename}#つぶやき|#{day_str}]]\n"
+  entries.each do |entry|
+    lines = entry.lines.map(&:rstrip)
+    if lines.any?
+      tlog_block << "  - #{lines.first}\n"
+      lines[1..-1].each do |line|
+        if line.empty?
+          tlog_block << "\n"
+        else
+          tlog_block << "    #{line}\n"
+        end
+      end
+    end
+  end
+end
+tlog_block << "\n"
 
 weekly_content = File.read(weekly_note_path, encoding: 'bom|utf-8')
 lines = weekly_content.lines
@@ -87,4 +110,5 @@ end
 new_lines.concat(lines)
 
 File.write(weekly_note_path, new_lines.join, encoding: 'UTF-8')
-puts "Added #{results.length} tlogs to #{weekly_note_path}"
+total_tlogs = results_by_date.values.map(&:size).sum
+puts "Added #{total_tlogs} tlogs to #{weekly_note_path}"
