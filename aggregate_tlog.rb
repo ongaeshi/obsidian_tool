@@ -11,7 +11,7 @@ unless File.exist?(weekly_note_path)
   exit 1
 end
 
-dir = File.dirname(weekly_note_path)
+dir = File.dirname(weekly_note_path).gsub('\\', '/')
 daily_notes = Dir.glob(File.join(dir, "*.md")).select do |f|
   File.basename(f) =~ /^\d{4}-\d{2}-\d{2}\.md$/
 end
