@@ -70,12 +70,11 @@ end
 
 tlog_block = "## tlog\n\n"
 results_by_date.each do |(basename, day_str), entries|
-  if entries.size == 1 && !entries.first.include?("\n")
-    tlog_block << "[[#{basename}#つぶやき|#{day_str}]] #{entries.first}\n\n"
-  else
-    tlog_block << "[[#{basename}#つぶやき|#{day_str}]]\n\n"
-    entries.each do |entry|
-      tlog_block << entry << "\n\n"
+  entries.each_with_index do |entry, index|
+    if index == 0
+      tlog_block << "#{entry} [[#{basename}#つぶやき|#{day_str}]]\n\n"
+    else
+      tlog_block << "#{entry}\n\n"
     end
   end
 end
