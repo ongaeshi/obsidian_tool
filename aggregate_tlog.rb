@@ -47,10 +47,12 @@ daily_notes.sort.each do |note_path|
   
   entries.each do |entry|
     if entry.include?("#tlog")
-      cleaned_entry = entry.gsub(/#tlog\s*/, "")
+      cleaned_entry = entry.strip
+      cleaned_entry = cleaned_entry.gsub(/#tlog[ \t]*/, "")
       # 行頭にあるかもしれない時刻(例: "- 12:34" や "12:34")を削除
-      cleaned_entry = cleaned_entry.sub(/^\s*[-*]?\s*\[?\d{1,2}:\d{2}\]?\s*/, "")
-      cleaned_entry = cleaned_entry.strip
+      cleaned_entry = cleaned_entry.sub(/\A[ \t]*[-*]?[ \t]*\[?\d{1,2}:\d{2}\]?[ \t]*/, "")
+      # タグや時刻の直後にあった改行を1つだけ削除（それ以降の意図的な空行は保持）
+      cleaned_entry = cleaned_entry.sub(/\A\r?\n/, "")
       
       day_results << cleaned_entry unless cleaned_entry.empty?
     end
@@ -68,22 +70,15 @@ end
 
 tlog_block = "## tlog\n\n"
 results_by_date.each do |(basename, day_str), entries|
-  tlog_block << "- [[#{basename}#つぶやき|#{day_str}]]\n"
-  entries.each do |entry|
-    lines = entry.lines.map(&:rstrip)
-    if lines.any?
-      tlog_block << "  - #{lines.first}\n"
-      lines[1..-1].each do |line|
-        if line.empty?
-          tlog_block << "\n"
-        else
-          tlog_block << "    #{line}\n"
-        end
-      end
+  if entries.size == 1 && !entries.first.include?("\n")
+    tlog_block << "[[#{basename}#つぶやき|#{day_str}]] #{entries.first}\n\n"
+  else
+    tlog_block << "[[#{basename}#つぶやき|#{day_str}]]\n\n"
+    entries.each do |entry|
+      tlog_block << entry << "\n\n"
     end
   end
 end
-tlog_block << "\n"
 
 weekly_content = File.read(weekly_note_path, encoding: 'bom|utf-8')
 lines = weekly_content.lines
