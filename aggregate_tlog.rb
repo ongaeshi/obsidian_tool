@@ -69,18 +69,17 @@ if results_by_date.empty?
 end
 
 tlog_block = "## tlog\n\n"
+links = []
+
 results_by_date.each do |(basename, day_str), entries|
-  if entries.size == 1 && !entries.first.include?("\n")
-    tlog_block << "#{entries.first} [[#{basename}#つぶやき|#{day_str}]]\n\n"
-  else
-    entries.each_with_index do |entry, index|
-      if index == entries.size - 1
-        tlog_block << "#{entry}\n[[#{basename}#つぶやき|#{day_str}]]\n\n"
-      else
-        tlog_block << "#{entry}\n\n"
-      end
-    end
+  links << "[[#{basename}#つぶやき|#{day_str}]]"
+  entries.each do |entry|
+    tlog_block << "#{entry}\n\n"
   end
+end
+
+if links.any?
+  tlog_block << links.join(" ") << "\n\n"
 end
 
 weekly_content = File.read(weekly_note_path, encoding: 'bom|utf-8')
