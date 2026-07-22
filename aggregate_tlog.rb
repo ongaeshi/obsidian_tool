@@ -24,7 +24,7 @@ daily_notes.sort.each do |note_path|
   date = Date.parse(basename) rescue nil
   next unless date
   
-  day_str = "#{date.month}/#{date.day}(#{days[date.wday]})"
+  day_str = days[date.wday]
   content = File.read(note_path, encoding: 'bom|utf-8')
   
   in_tsubuyaki = false
@@ -79,7 +79,7 @@ results_by_date.each do |(basename, day_str), entries|
 end
 
 if links.any?
-  tlog_block << links.join(" ") << "\n\n"
+  tlog_block << links.join(" | ") << "\n\n"
 end
 
 weekly_content = File.read(weekly_note_path, encoding: 'bom|utf-8')
